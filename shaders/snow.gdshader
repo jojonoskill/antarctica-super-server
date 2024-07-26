@@ -10,7 +10,7 @@ uniform float albedo_brightness; // Brightness adjustment
 
 void vertex() {
     float snow_mask = COLOR.r * texture(dynamic_snow_mask, UV).r;
-    VERTEX.y += snow_mask * (snow_height * 4.0);
+    VERTEX.y += snow_mask * snow_height;
 }
 
 void fragment() {
@@ -20,7 +20,7 @@ void fragment() {
     vec3 snow_n = texture(snow_normal, uv).rgb;
     // Adjust albedo color brightness
     vec3 adjusted_albedo = snow_a * albedo_brightness;
-    adjusted_albedo *= (texture(dynamic_snow_mask, UV).r + 0.7);
+    adjusted_albedo *= min(texture(dynamic_snow_mask, UV).r + 0.7, 1.0);
     ALBEDO = adjusted_albedo;
     NORMAL_MAP = snow_n;
 }

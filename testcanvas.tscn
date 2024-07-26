@@ -1,33 +1,40 @@
-[gd_scene load_steps=17 format=3 uid="uid://dxrbujwiuiiv2"]
+[gd_scene load_steps=19 format=3 uid="uid://dxrbujwiuiiv2"]
 
 [ext_resource type="Script" path="res://gdscripts/networking/networking.gd" id="1_o5768"]
-[ext_resource type="PackedScene" uid="uid://b7hhsmil1y7i2" path="res://sub_viewport.tscn" id="2_aem5k"]
 [ext_resource type="Texture2D" uid="uid://cy2djmqlahk0f" path="res://assets/snow/textures/snow_albedo.jpg" id="3_a7hdg"]
 [ext_resource type="Texture2D" uid="uid://cqq3rm82uv8cr" path="res://assets/snow/textures/snow_normal.jpg" id="4_bbcp6"]
 [ext_resource type="Shader" path="res://shaders/snow.gdshader" id="4_bv2vm"]
+[ext_resource type="PackedScene" uid="uid://dvs0s3544jwxm" path="res://csg_mesh_3d.tscn" id="4_sqver"]
+[ext_resource type="Script" path="res://gdscripts/snow/snow.gd" id="5_pljp3"]
 [ext_resource type="Texture2D" uid="uid://cehn2lbv43aa2" path="res://addons/kenney_particle_pack/smoke_01.png" id="6_nfrjg"]
 [ext_resource type="Script" path="res://gdscripts/weather/weather.gd" id="6_rq5w7"]
 
-[sub_resource type="ViewportTexture" id="ViewportTexture_dt5xf"]
-viewport_path = NodePath("Snow/SubViewportContainer/SubViewport")
+[sub_resource type="ImageTexture" id="ImageTexture_pryai"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_avlrl"]
-resource_local_to_scene = true
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_gxgnd"]
 render_priority = 0
 shader = ExtResource("4_bv2vm")
 shader_parameter/uv_scale = 40.0
-shader_parameter/snow_height = 1.3
+shader_parameter/snow_height = 0.5
 shader_parameter/albedo_brightness = 1.0
 shader_parameter/snow_albedo = ExtResource("3_a7hdg")
 shader_parameter/snow_normal = ExtResource("4_bbcp6")
-shader_parameter/dynamic_snow_mask = SubResource("ViewportTexture_dt5xf")
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_ifay1"]
+[sub_resource type="PlaneMesh" id="PlaneMesh_erg1x"]
 resource_local_to_scene = true
-material = SubResource("ShaderMaterial_avlrl")
+material = SubResource("ShaderMaterial_gxgnd")
 size = Vector2(200, 200)
-subdivide_width = 400
-subdivide_depth = 400
+subdivide_width = 512
+subdivide_depth = 512
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_6j1ei"]
+render_priority = 0
+shader = ExtResource("4_bv2vm")
+shader_parameter/uv_scale = 40.0
+shader_parameter/snow_height = 0.5
+shader_parameter/albedo_brightness = 1.0
+shader_parameter/snow_albedo = ExtResource("3_a7hdg")
+shader_parameter/snow_normal = ExtResource("4_bbcp6")
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_we5jc"]
 sky_top_color = Color(0.297161, 0.420175, 0.79076, 1)
@@ -78,7 +85,7 @@ metadata/_edit_horizontal_guides_ = [307.0]
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.463585, 0.731498, 0.5, -0.706201, -0.0357746, 0.707107, 0.535134, -0.680905, 0.5, 1000, 1000, 0)
-light_energy = 1.499
+light_energy = 1.203
 light_indirect_energy = 0.0
 light_volumetric_fog_energy = 0.0
 shadow_enabled = true
@@ -136,24 +143,17 @@ spawn_path = NodePath("..")
 layout_mode = 3
 anchors_preset = 0
 
-[node name="SubViewportContainer" type="SubViewportContainer" parent="Snow"]
-texture_filter = 2
-layout_mode = 0
-offset_right = 512.0
-offset_bottom = 512.0
-scale = Vector2(0.3, 0.3)
-
-[node name="SubViewport" parent="Snow/SubViewportContainer" instance=ExtResource("2_aem5k")]
-disable_3d = false
+[node name="SnowField" type="Sprite2D" parent="Snow"]
+visible = false
+scale = Vector2(1e-05, 1e-05)
+texture = SubResource("ImageTexture_pryai")
+script = ExtResource("5_pljp3")
 world_extents = Rect2(0, 0, 200, 200)
+update_interval = 12
 
-[node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="Snow/SubViewportContainer/SubViewport"]
-_spawnable_scenes = PackedStringArray("res://snow_brush.tscn")
-spawn_path = NodePath("..")
-
-[node name="CSGMesh3D" type="CSGMesh3D" parent="Snow"]
-use_collision = true
-mesh = SubResource("PlaneMesh_ifay1")
+[node name="SnowMesh" parent="Snow" instance=ExtResource("4_sqver")]
+mesh = SubResource("PlaneMesh_erg1x")
+material = SubResource("ShaderMaterial_6j1ei")
 
 [node name="Weather" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_6gc1m")
@@ -161,6 +161,7 @@ script = ExtResource("6_rq5w7")
 
 [node name="GPUParticles3D" type="GPUParticles3D" parent="Weather"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.204315, 37.8847, 0.113153)
+visible = false
 amount = 100000
 lifetime = 10.0
 fixed_fps = 60

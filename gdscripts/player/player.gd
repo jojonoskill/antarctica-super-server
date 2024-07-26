@@ -11,7 +11,7 @@ var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 @onready var camera = $Camera3D
 @onready var animation_player = $AnimationPlayer # Reference the AnimationPlayer node
 @onready var animation_tree = $AnimationTree
-@onready var snow_field = $"../Snow/SubViewportContainer/SubViewport"
+@onready var snow_field = $"../Snow/SnowField"
 
 func _enter_tree():
 	set_multiplayer_authority(str(name).to_int())
@@ -75,10 +75,17 @@ func _physics_process(delta):
 	move_and_slide()
 	force_update_transform()
 	
+	rpc("draw_sprite", position.x + 0.01 * direction.x, position.z + 0.01 * direction.y)
+	
 	if input_dir != Vector3.ZERO:
 		rpc("start_walking")
 	else:
 		rpc("stop_walking")
+
+@rpc("call_local")
+func draw_sprite(x, y):
+	snow_field.draw_sprite_on_pos(x, y)
+	
 
 @rpc("call_local")
 func stop_walking():
