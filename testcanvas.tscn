@@ -1,17 +1,87 @@
-[gd_scene load_steps=2 format=3 uid="uid://dxrbujwiuiiv2"]
+[gd_scene load_steps=17 format=3 uid="uid://dxrbujwiuiiv2"]
 
 [ext_resource type="Script" path="res://gdscripts/networking/networking.gd" id="1_o5768"]
+[ext_resource type="PackedScene" uid="uid://b7hhsmil1y7i2" path="res://sub_viewport.tscn" id="2_aem5k"]
+[ext_resource type="Texture2D" uid="uid://cy2djmqlahk0f" path="res://assets/snow/textures/snow_albedo.jpg" id="3_a7hdg"]
+[ext_resource type="Texture2D" uid="uid://cqq3rm82uv8cr" path="res://assets/snow/textures/snow_normal.jpg" id="4_bbcp6"]
+[ext_resource type="Shader" path="res://shaders/snow.gdshader" id="4_bv2vm"]
+[ext_resource type="Texture2D" uid="uid://cehn2lbv43aa2" path="res://addons/kenney_particle_pack/smoke_01.png" id="6_nfrjg"]
+[ext_resource type="Script" path="res://gdscripts/weather/weather.gd" id="6_rq5w7"]
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_dt5xf"]
+viewport_path = NodePath("Snow/SubViewportContainer/SubViewport")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_avlrl"]
+resource_local_to_scene = true
+render_priority = 0
+shader = ExtResource("4_bv2vm")
+shader_parameter/uv_scale = 40.0
+shader_parameter/snow_height = 1.3
+shader_parameter/albedo_brightness = 1.0
+shader_parameter/snow_albedo = ExtResource("3_a7hdg")
+shader_parameter/snow_normal = ExtResource("4_bbcp6")
+shader_parameter/dynamic_snow_mask = SubResource("ViewportTexture_dt5xf")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_ifay1"]
+resource_local_to_scene = true
+material = SubResource("ShaderMaterial_avlrl")
+size = Vector2(200, 200)
+subdivide_width = 400
+subdivide_depth = 400
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_we5jc"]
+sky_top_color = Color(0.297161, 0.420175, 0.79076, 1)
+sky_horizon_color = Color(0.851004, 0.566838, 0.576166, 1)
+sky_curve = 0.047796
+sky_energy_multiplier = 2.2
+
+[sub_resource type="Sky" id="Sky_0dfpr"]
+sky_material = SubResource("ProceduralSkyMaterial_we5jc")
+
+[sub_resource type="Environment" id="Environment_6gc1m"]
+background_mode = 2
+background_color = Color(0.0603132, 0.0139941, 0.00248075, 1)
+sky = SubResource("Sky_0dfpr")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_my74i"]
+emission_shape = 3
+emission_box_extents = Vector3(100, 1, 100)
+angle_max = 360.0
+direction = Vector3(1, -1, 0)
+initial_velocity_min = 10.0
+initial_velocity_max = 20.0
+angular_velocity_min = 30.0
+angular_velocity_max = 50.0
+linear_accel_min = 1.0
+linear_accel_max = 10.0
+scale_min = 0.5
+collision_mode = 1
+collision_friction = 0.0
+collision_bounce = 0.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l3le0"]
+transparency = 1
+shading_mode = 0
+albedo_texture = ExtResource("6_nfrjg")
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_t1gv2"]
+material = SubResource("StandardMaterial3D_l3le0")
 
 [node name="World" type="Node"]
 script = ExtResource("1_o5768")
-
-[node name="CSGBox3D" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.289751, -0.730778, -11.5128)
-use_collision = true
-size = Vector3(30, 1, 30)
+metadata/_edit_horizontal_guides_ = [307.0]
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, -0.141982, 8.98065, 1.051)
+transform = Transform3D(0.463585, 0.731498, 0.5, -0.706201, -0.0357746, 0.707107, 0.535134, -0.680905, 0.5, 1000, 1000, 0)
+light_energy = 1.499
+light_indirect_energy = 0.0
+light_volumetric_fog_energy = 0.0
+shadow_enabled = true
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -50,9 +120,57 @@ layout_mode = 2
 placeholder_text = "IP"
 alignment = 1
 
+[node name="TurnOnSnow" type="CheckButton" parent="CanvasLayer"]
+offset_left = 6.0
+offset_top = 12.0
+offset_right = 104.0
+offset_bottom = 43.0
+text = "SNOW
+"
+
 [node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="."]
 _spawnable_scenes = PackedStringArray("res://player.tscn")
 spawn_path = NodePath("..")
 
+[node name="Snow" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="Snow"]
+texture_filter = 2
+layout_mode = 0
+offset_right = 512.0
+offset_bottom = 512.0
+scale = Vector2(0.3, 0.3)
+
+[node name="SubViewport" parent="Snow/SubViewportContainer" instance=ExtResource("2_aem5k")]
+disable_3d = false
+world_extents = Rect2(0, 0, 200, 200)
+
+[node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="Snow/SubViewportContainer/SubViewport"]
+_spawnable_scenes = PackedStringArray("res://snow_brush.tscn")
+spawn_path = NodePath("..")
+
+[node name="CSGMesh3D" type="CSGMesh3D" parent="Snow"]
+use_collision = true
+mesh = SubResource("PlaneMesh_ifay1")
+
+[node name="Weather" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_6gc1m")
+script = ExtResource("6_rq5w7")
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="Weather"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.204315, 37.8847, 0.113153)
+amount = 100000
+lifetime = 10.0
+fixed_fps = 60
+visibility_aabb = AABB(-123.734, -1199.14, -440.898, 779.732, 1201.16, 873.788)
+process_material = SubResource("ParticleProcessMaterial_my74i")
+draw_pass_1 = SubResource("QuadMesh_t1gv2")
+
+[node name="GPUParticlesCollisionBox3D" type="GPUParticlesCollisionBox3D" parent="Weather"]
+size = Vector3(30, 1, 30)
+
 [connection signal="pressed" from="CanvasLayer/PanelContainer/MarginContainer/VBoxContainer/Host" to="." method="_on_host_pressed"]
 [connection signal="pressed" from="CanvasLayer/PanelContainer/MarginContainer/VBoxContainer/Join" to="." method="_on_join_pressed"]
+[connection signal="toggled" from="CanvasLayer/TurnOnSnow" to="Weather" method="_on_turn_on_snow_toggled"]

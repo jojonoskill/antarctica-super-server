@@ -11,6 +11,7 @@ var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 @onready var camera = $Camera3D
 @onready var animation_player = $AnimationPlayer # Reference the AnimationPlayer node
 @onready var animation_tree = $AnimationTree
+@onready var snow_field = $"../Snow/SubViewportContainer/SubViewport"
 
 func _enter_tree():
 	set_multiplayer_authority(str(name).to_int())
@@ -43,11 +44,11 @@ func _physics_process(delta):
 	# Add the gravity.
 	if not is_on_floor():
 		velocity.y -= gravity * delta
-
+	
 	# Handle Jump.
 	if Input.is_action_just_pressed("ui_accept") and is_on_floor() and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		velocity.y += JUMP_VELOCITY
-
+		
 	# Get the input direction and handle the movement/deceleration.
 	# As good practice, you should replace UI actions with custom gameplay actions.
 	var input_dir = Vector3.ZERO
@@ -57,6 +58,12 @@ func _physics_process(delta):
 	input_dir = input_dir.normalized()
 	var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 	direction *= SPEED
+	
+	# Slow from snow is not fully functional
+	var snow_amount = snow_field.get_snow_amount_at_pos(position.x + 0.01 * direction.x, position.z + 0.01 * direction.y)
+	if snow_amount > 0.05:
+		direction *= 0.6
+	
 	velocity.x = move_toward(velocity.x, direction.x, HORIZONTAL_ACCELERATION * delta)
 	velocity.z = move_toward(velocity.z, direction.z, HORIZONTAL_ACCELERATION * delta)
 

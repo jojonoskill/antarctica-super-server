@@ -2,8 +2,10 @@ extends Node
 
 @onready var main_menu = $CanvasLayer/PanelContainer
 @onready var address_entry = $CanvasLayer/PanelContainer/MarginContainer/VBoxContainer/IpEntry
+@onready var snow_viewport = $Snow/SubViewportContainer/SubViewport
 
 const Player = preload("res://player.tscn")
+const SnowBrush = preload("res://snow_brush.tscn")
 const PORT = 9999
 var enet_peer = ENetMultiplayerPeer.new()
 
@@ -24,8 +26,24 @@ func _on_join_pressed():
 
 func add_player(peer_id):
 	var player = Player.instantiate()
+	var snow_brush = SnowBrush.instantiate()
+	
+	snow_brush.player = player
+	snow_brush.name = str(peer_id)
 	player.name = str(peer_id)
+	
 	add_child(player)
+	snow_viewport.add_child(snow_brush)
+	
+	rpc("set_snow_brush_player", str(peer_id), str(peer_id))
+	
+@rpc("call_local")
+func set_snow_brush_player(snow_brush_name, player_name):
+	var snow_brush = snow_viewport.get_node(snow_brush_name)
+	var player = get_node(player_name)
+
+	if snow_brush and player:
+		snow_brush.player = player
 
 func remove_player(peer_id):
 	var player = get_node_or_null(str(peer_id))
